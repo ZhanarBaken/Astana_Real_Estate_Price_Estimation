@@ -2,6 +2,7 @@
 import re
 import ast
 import time
+import math
 import numpy as np
 import pandas as pd
 import datetime
@@ -32,71 +33,73 @@ def read_data(filename):
     df = pd.read_csv(f"data/{filename}.csv")
     return df
 
-def parse_data_from_krisha(first_page, last_page):
-    # Creating DataFrame to store data
+def parse_data_from_krisha(total_pages):
+    
+    total_pages = math.floor(total_pages / 100) * 100
     krisha_df = pd.DataFrame(columns=['name', 'information', 'address', 'price', 'owner'])
-
-    # Creating WebDriver
-    chrome_options = webdriver.ChromeOptions()
-    chrome_options.add_argument("--headless")  # Running in headless mode
-    chrome_options.binary_location = "/Applications/Google Chrome for Testing"
-    driver = webdriver.Chrome(options=chrome_options)
-
-    # URL
     base_url = "https://krisha.kz/prodazha/kvartiry/astana/?page="
 
-    # Iterating over pages
-    for page_number in range(first_page, last_page):  
-        url = base_url + str(page_number)
-        driver.get(url)
+    # Iterating over 100 pages
+    for i in range(0, total_pages, 100):
+        start_page = i + 1
+        end_page = i + 100
+        
+        chrome_options = webdriver.ChromeOptions()
+        chrome_options.add_argument("--headless")  # Running in headless mode
+        chrome_options.binary_location = "/Applications/Google Chrome for Testing"
+        driver = webdriver.Chrome(options=chrome_options)
+    
+        # Iterating over pages
+        for page_number in range(start_page, end_page):  
+            url = base_url + str(page_number)
+            driver.get(url)
 
-        try:
-            # Waiting for at least one element to load
-            WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, 'a-card__title')))
+            try:
+                # Waiting for at least one element to load
+                WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, 'a-card__title')))
 
-            # Finding all elements on the page
-            housing_complex_elements = driver.find_elements(By.CLASS_NAME, 'a-card')
+                # Finding all elements on the page
+                housing_complex_elements = driver.find_elements(By.CLASS_NAME, 'a-card')
 
-            # Iterating over complex elements
-            for complex_element in housing_complex_elements:
-                # Extracting required data
-                name = complex_element.find_element(By.CLASS_NAME, 'a-card__title').text.strip()
-                information = complex_element.find_element(By.CLASS_NAME, 'a-card__text-preview').text.strip()
-                address = complex_element.find_element(By.CLASS_NAME, 'a-card__subtitle').text.strip()
-                price = complex_element.find_element(By.CLASS_NAME, 'a-card__price').text.strip()
-                
-                # Using BeautifulSoup to parse HTML inside complex_element
-                soup = BeautifulSoup(complex_element.get_attribute('outerHTML'), 'html.parser')
-                
-                # Searching for elements with different types of advertisements
-                complex_label = soup.find('div', class_='a-card__complex-label')
-                label_default = soup.find('div', class_='label--default')
-                label_yellow = soup.find('div', class_='label--yellow')
-                label_transparent = soup.find('div', class_='label--transparent')
-                
-                # Determining the type of advertisement
-                if complex_label:
-                    owner = "Новостройка"
-                elif label_default:
-                    owner = "Риелтор"
-                elif label_yellow:
-                    owner = "Хозяин недвижимости"
-                elif label_transparent:
-                    owner = "Риелтор"
-                else:
-                    owner = "Неизвестно"
+                # Iterating over complex elements
+                for complex_element in housing_complex_elements:
+                    # Extracting required data
+                    name = complex_element.find_element(By.CLASS_NAME, 'a-card__title').text.strip()
+                    information = complex_element.find_element(By.CLASS_NAME, 'a-card__text-preview').text.strip()
+                    address = complex_element.find_element(By.CLASS_NAME, 'a-card__subtitle').text.strip()
+                    price = complex_element.find_element(By.CLASS_NAME, 'a-card__price').text.strip()
+                    
+                    # Using BeautifulSoup to parse HTML inside complex_element
+                    soup = BeautifulSoup(complex_element.get_attribute('outerHTML'), 'html.parser')
+                    
+                    # Searching for elements with different types of advertisements
+                    complex_label = soup.find('div', class_='a-card__complex-label')
+                    label_default = soup.find('div', class_='label--default')
+                    label_yellow = soup.find('div', class_='label--yellow')
+                    label_transparent = soup.find('div', class_='label--transparent')
+                    
+                    # Determining the type of advertisement
+                    if complex_label:
+                        owner = "Новостройка"
+                    elif label_default:
+                        owner = "Риелтор"
+                    elif label_yellow:
+                        owner = "Хозяин недвижимости"
+                    elif label_transparent:
+                        owner = "Риелтор"
+                    else:
+                        owner = "Неизвестно"
 
-                # Storing data in DataFrame
-                data = [name, information, address, price, owner]
-                krisha_df = pd.concat([krisha_df, pd.DataFrame([data], columns=krisha_df.columns)], ignore_index=True)
-                
-        except Exception as e:
-            print(f"An error occurred: {e}")
+                    # Storing data in DataFrame
+                    data = [name, information, address, price, owner]
+                    krisha_df = pd.concat([krisha_df, pd.DataFrame([data], columns=krisha_df.columns)], ignore_index=True)
+                    
+            except Exception as e:
+                print(f"An error occurred: {e}")
 
     # Closing the WebDriver
     driver.quit()
 
-    
     return krisha_df
 
 
