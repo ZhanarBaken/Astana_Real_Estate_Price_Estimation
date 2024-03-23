@@ -24,6 +24,10 @@ import requests
 import json
 from bs4 import BeautifulSoup
 
+from sklearn.metrics import mean_squared_log_error 
+from sklearn.metrics import make_scorer
+from sklearn.model_selection import learning_curve
+
 
 def save_data(data, filename):
     # Saving DataFrame to CSV file
@@ -1234,6 +1238,44 @@ def decision_normality(p, alpha = 0.05  ):
 def decision_hypothesis(p, alpha = 0.05 ):
     print('p-value = {:.3f}'.format(p))
     if p <= alpha:
-        print('p-value is less than the specified significance level {:.2f}. We reject the null hypothesis in favor of the alternative.'.format(alpha))
+        print('p-value is less than the specified significance level {:.2f}. Differences between categories are statistically significant.'.format(alpha))
     else:
-        print('p-value is greater than the specified significance level {:.2f}. We have no grounds to reject the null hypothesis.'.format(alpha))
+        print('p-value is greater than the specified significance level {:.2f}. No statistically significant differences between categories.'.format(alpha))
+
+
+def mean_relative_error(y_true, y_pred):
+    y_true_exp = np.exp(y_true) 
+    y_pred_exp = np.exp(y_pred)
+    relative_errors = np.abs((y_true_exp - y_pred_exp) / y_true_exp)
+    return np.mean(relative_errors)
+
+def plot_learning_curve(model, X, y, cv, ax=None, title=""):
+    mre_scorer = make_scorer(mean_relative_error, greater_is_better=False)
+    # Вычисляем координаты для построения кривой обучения
+    train_sizes, train_scores, valid_scores = learning_curve(
+        estimator=model,  # модель
+        X=X,  # матрица наблюдений X
+        y=y,  # вектор ответов y
+        cv=cv,  # кросс-валидатор
+        scoring=mre_scorer
+    )
+    # Вычисляем среднее значение по фолдам для каждого набора данных
+    train_scores_mean = np.mean(train_scores, axis=1)
+    valid_scores_mean = np.mean(valid_scores, axis=1)
+    # Если координатной плоскости не было передано, создаём новую
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(10, 4))  # фигура + координатная плоскость
+    # Строим кривую обучения по метрикам на тренировочных фолдах
+    ax.plot(train_sizes, train_scores_mean, label="Train")
+    # Строим кривую обучения по метрикам на валидационных фолдах
+    ax.plot(train_sizes, valid_scores_mean, label="Valid")
+    # Даём название графику и подписи осям
+    ax.set_title("Learning curve: {}".format(title))
+    ax.set_xlabel("Train data size")
+    ax.set_ylabel("Score")
+    # Устанавливаем отметки по оси абсцисс
+    ax.xaxis.set_ticks(train_sizes)
+    # # Устанавливаем диапазон оси ординат
+    # ax.set_ylim(0, 1)
+    # Отображаем легенду
+    ax.legend()
