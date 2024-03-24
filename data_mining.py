@@ -30,15 +30,41 @@ from sklearn.model_selection import learning_curve
 
 
 def save_data(data, filename):
-    # Saving DataFrame to CSV file
+    # Saving DataFrame to CSV file to the folder 'data'
     data.to_csv(f"data/{filename}.csv", index=False)
     
 def read_data(filename):
+    # Reading CSV file from the folder 'data'
     df = pd.read_csv(f"data/{filename}.csv")
     return df
 
+
+##############################
+# Functions for parsing data #
+##############################
 def parse_data_from_krisha(total_pages):
-    
+    '''
+    Description:
+        Parses data from multiple pages of Krisha.kz, a real estate website in Kazakhstan. 
+        The function iterates over the specified number of pages, scrapes information about housing complexes listed on each page, 
+        and stores the data in a DataFrame.
+
+    Arguments:
+        - total_pages: Total number of pages to parse data from on Krisha.kz.
+
+    Returns:
+        - krisha_df: DataFrame containing the parsed data with columns 'name', 'information', 'address', 'price', and 'owner'.
+
+    Dependencies:
+        - pandas
+        - math
+        - selenium.webdriver
+        - selenium.webdriver.chrome.options
+        - selenium.webdriver.common.by.By
+        - selenium.webdriver.support.ui.WebDriverWait
+        - selenium.webdriver.support.expected_conditions.presence_of_element_located
+        - bs4.BeautifulSoup
+    '''
     total_pages = math.floor(total_pages / 100) * 100
     krisha_df = pd.DataFrame(columns=['name', 'information', 'address', 'price', 'owner'])
     base_url = "https://krisha.kz/prodazha/kvartiry/astana/?page="
@@ -108,7 +134,21 @@ def parse_data_from_krisha(total_pages):
 
 
 def preprocess_krisha_df(krisha_df):
-    
+    '''
+    Description:
+    Preprocesses the DataFrame containing data scraped from Krisha.kz. 
+    The function performs various data cleaning and feature extraction tasks on the input DataFrame 
+    and returns a preprocessed DataFrame.
+
+    Arguments:
+        - krisha_df: DataFrame containing the raw data scraped from Krisha.kz.
+
+    Returns:
+        - krisha_df: Preprocessed DataFrame with additional columns containing extracted features such as complex name, 
+        house type, construction year, ceiling height, furniture info, bathroom info, condition, area, room count, 
+        floor information, price, and district.
+        
+    '''
     krisha_df = krisha_df.drop_duplicates()
     # Extracting complex name, house type, construction year, ceiling height, furniture info,
     # bathroom info, condition,  from 'information' column
@@ -157,6 +197,18 @@ def preprocess_krisha_df(krisha_df):
 
 
 def parse_data_from_kn():
+    '''
+    Description:
+    Scrapes data from the KN.kz website regarding constructed and under-construction residential complexes in Astana. 
+    The function retrieves information such as complex name, city district, address, price, developer, 
+    and characteristics of the complexes. It then organizes this data into a DataFrame and returns it.
+
+    Arguments:
+        - None
+
+    Returns:
+        - complex_df: DataFrame containing information about constructed and under-construction residential complexes in Astana.
+    '''
     
     # We are downloading data on constructed residential complexes.
     # Creating DataFrame to store information about constructed living complexes
@@ -342,7 +394,30 @@ def parse_data_from_kn():
     return complex_df
 
 
+
+#################################################################
+# Process and Cleaning Functions  for  krisha_df and complex_df #
+#################################################################
 def preprocess_complex_df(complex_df):
+    '''
+    Description:
+    Preprocesses the DataFrame containing information about constructed and under-construction residential complexes in Astana.
+    The function performs the following steps:
+        - Extracts complex names without the "ЖК" word from the "complex_name" column.
+        - Converts the string representation of dictionaries in the "characteristics" column to actual dictionaries using ast.literal_eval.
+        - Expands the dictionaries into separate columns using json_normalize.
+        - Adds the new columns to the original DataFrame.
+        - Drops the column containing the original dictionaries.
+        - Drops unnecessary features from the characteristics.
+        - Renames the new columns to English names.
+
+    Arguments:
+        - complex_df: DataFrame containing information about constructed and under-construction residential complexes in Astana.
+
+    Returns:
+        - complex_df: Preprocessed DataFrame.
+    '''
+    
     # Extracting complex name without "ЖК" word from "complex_name" column
     complex_df['complex_name'] = complex_df.complex_name.apply(lambda x: ' '.join(x.split(' ')[1:]))
     complex_df['complex_name'] = complex_df['complex_name'].apply(text_unification)
@@ -373,6 +448,21 @@ def preprocess_complex_df(complex_df):
 
 
 def find_missing_complexes(krisha_df, complex_df):
+    '''
+    Description:
+    Finds the residential complexes present in krisha_df but absent in complex_df. It performs the following steps:
+        - Creates sets of unique complex names from krisha_df and complex_df.
+        - Finds the difference between the sets to identify missing complexes.
+        - Prints the number of missing complexes and their names.
+
+    Arguments:
+        - krisha_df: DataFrame containing information about residential complexes from Krisha.
+        - complex_df: DataFrame containing information about  residential complexes in Astana.
+
+    Returns:
+        None
+    '''
+    
     # Creating sets of unique complex names
     set_df = set(krisha_df['complex_name'].unique())
     set_complex_df = set(complex_df['complex_name'].unique())
@@ -402,6 +492,24 @@ def text_unification(complex_name: str) -> str:
 
     
 def second_preprocess_complex_df(complex_df):
+    '''
+    Description:
+    Preprocesses the residential complex DataFrame by making various corrections, additions, and transformations. 
+    It performs the following steps:
+    1. Creates new residential complexes based on existing ones.
+    2. Applies corrections to the names of existing complexes using a predefined dictionary.
+    3. Concatenates new data with the existing DataFrame.
+    4. Standardizes values in the 'house_type' and 'parking' columns.
+    5. Updates values in the 'year', 'complex_class', 'district', 'min_floor_count', and 'max_floor_count' columns based on specific conditions.
+    6. Drops unnecessary columns and splits the 'floor_count' column into 'min_floor_count' and 'max_floor_count'.
+
+    Arguments:
+        - complex_df: DataFrame containing information about residential complexes in Astana.
+
+    Returns:
+        DataFrame: Preprocessed residential complex DataFrame.
+    '''
+    
     # Create new residential complex 'kolsai' based on 'sharyn'
     selected_row_sharyn = complex_df[complex_df.complex_name == 'sharyn'].copy()
     selected_row_sharyn['complex_name'] = f"kolsai"
@@ -732,7 +840,19 @@ def second_preprocess_complex_df(complex_df):
     return complex_df
 
 def second_preprocess_krisha_df(krisha_df):
-        
+    '''
+    Description:
+    Preprocesses the Krisha DataFrame by updating complex names based on house types 
+    and applying corrections to complex names using a predefined dictionary. It performs the following steps:
+    1. Updates complex names based on house types for specific complexes.
+    2. Applies corrections to complex names using a predefined dictionary.
+
+    Arguments:
+        - krisha_df: DataFrame containing information about real estate listings from the Krisha website.
+
+    Returns:
+        DataFrame: Preprocessed complex names in Krisha DataFrame.
+    '''
     # Update complex names based on house types
     # Update complex name to 'восток 2009' for monolithic houses in 'восток'
     vostok_09 = krisha_df.query("complex_name.str.contains('восток') and house_type=='монолитный дом'").index
@@ -838,7 +958,24 @@ def second_preprocess_krisha_df(krisha_df):
     return krisha_df
 
 
+#---------------------------------------------------------
+# Function for Geocoding Addresses using the 2GIS API
+#---------------------------------------------------------
 def geocode_2gis(address):
+    '''
+    Description:
+    Performs geocoding of an address using the 2GIS API to retrieve latitude and longitude coordinates. 
+    It constructs a URL with the provided address, sends a GET request to the 2GIS API, 
+    and parses the response to extract the coordinates.
+
+    Arguments:
+        - address (str): The address to be geocoded.
+
+    Returns:
+        str or None: A string containing latitude and longitude coordinates in the format "(latitude, longitude)"
+        if the geocoding is successful, otherwise None.
+    '''
+    
     address = address + ", Астана"
     api_key = '031aa401-ce07-402c-95ed-23f70fc51f24' 
     #api_key = 'ed9415cf-b4fd-4bc5-98b9-9da7e3ee9908' #'dbfc2ea8-0262-4ef3-acb2-d0a46adf9557'
@@ -859,6 +996,11 @@ def geocode_2gis(address):
         print(f"Error fetching or decoding JSON: {e}")
     return None
 
+
+
+#-----------------------------------------------------------------------------------------
+# Dictionaries for Functions that calculate or check places based on complex coordinates 
+#-----------------------------------------------------------------------------------------
 
 schools_coord_dict = {
     'Бәсіре переулок, 2, 2 этаж': (51.185095, 71.330193),
@@ -1071,9 +1213,28 @@ kindergartens_coord_dict = {
     'ул. Ардагерлер, д. 13': (51.182051, 71.341128)
     }
 
+
+
+#############################################################################
+# Functions for calculating or checking places based on complex coordinates #
+#############################################################################
 # Counting the number of nearby places
 def count_places_within_radius(places_dict, complex_coordinates, radius):
-   
+    '''
+    Counts the number of places (schools or kindergartens) within a specified radius from a given complex location.
+
+    Arguments:
+        - places_dict (str): A string indicating the type of places to count. It should be either 'school' or 'kindergarten'.
+        - complex_coordinates (tuple): A tuple containing the latitude and longitude coordinates of the complex location.
+        - radius (float): The radius within which to search for places, in meters.
+
+    Returns:
+        int: The count of places (schools or kindergartens) within the specified radius from the complex location.
+
+    Raises:
+        ValueError: If the places_dict argument is not 'school' or 'kindergarten'.
+    '''
+    
     if places_dict == 'school':
         places_dict = schools_coord_dict
                 
@@ -1094,6 +1255,16 @@ def count_places_within_radius(places_dict, complex_coordinates, radius):
 
 # Checking if there is a park within 1 km radius
 def checking_park(coordinates, radius):
+    '''
+    Checks if there is a park within a specified radius from the given coordinates.
+
+    Arguments:
+        - coordinates (tuple): A tuple containing the latitude and longitude coordinates.
+        - radius (float): The radius within which to search for parks, in meters.
+
+    Returns:
+        bool: True if there is a park within the specified radius, False otherwise.
+    '''
     
     parks_coord_dict = {
     'Парк Президентский': (51.106349, 71.477572),
@@ -1121,35 +1292,53 @@ def checking_park(coordinates, radius):
         
     return False  
 
-    
+
+
+###################################
+# Process Function for  merged df #
+###################################
 def process_and_clean_data(merged_df):
+    """
+    Process and clean the input DataFrame.
+
+    Args:
+    merged_df (DataFrame): Merged DataFrame containing property data.
+
+    Returns:
+    DataFrame: Processed and cleaned DataFrame.
+    """
     
+    # Combine related columns to fill missings 
     merged_df['coordinates'] = merged_df['coordinates_2gis'].combine_first(merged_df['coordinates_2gis_complex'])
     merged_df['ceiling_height'] = merged_df['ceiling_height'].combine_first(merged_df['ceiling_height_complex'])
     merged_df['house_type'] = merged_df['house_type_complex'].combine_first(merged_df['house_type'])
     merged_df['district'] = merged_df['district_complex'].combine_first(merged_df['district'])
     merged_df['address'] = merged_df['address'].combine_first(merged_df['address_complex'])
     
-    # Удаление вторых не главных столбцов
-    merged_df = merged_df.drop(['coordinates_2gis_complex', 'coordinates_2gis', 'ceiling_height_complex', 'house_type_complex', 'year', \
-                                'district_complex', 'address_complex', 'full_address', 'max_floor_count', 'min_floor_count'], axis=1)
+    # Drop redundant columns
+    merged_df = merged_df.drop(['coordinates_2gis_complex', 'coordinates_2gis', 'ceiling_height_complex', 
+                                'house_type_complex', 'year', 'district_complex', 'address_complex', 
+                                'full_address', 'max_floor_count', 'min_floor_count'], axis=1)
 
-
+    # Standardize elevator values
     merged_df['elevator'] = merged_df['elevator'].apply(lambda x: 'пассажирский' if x == 'пассажирский и грузовой' else x)
 
+    # Remove 'Новостройка' from owner column and set 'Неизвестно' to 'Хозяин недвижимости'
     merged_df = merged_df[merged_df.owner != 'Новостройка'].reset_index(drop=True)
     merged_df.loc[(merged_df.owner=='Неизвестно'), 'owner'] = 'Хозяин недвижимости'
 
+    # Set condition based on construction year
     current_year = datetime.datetime.now().year
-    indexes_to_change = merged_df[(merged_df.construction_year>=current_year)&(merged_df.condition.isna())].index
+    indexes_to_change = merged_df[(merged_df.construction_year >= current_year) & (merged_df.condition.isna())].index
     merged_df.loc[indexes_to_change, 'condition'] = 'черновая отделка'
-    indexes_to_change = merged_df[merged_df.condition=='свободная планировка'].index
+    indexes_to_change = merged_df[merged_df.condition == 'свободная планировка'].index
     merged_df.loc[indexes_to_change, 'condition'] = 'черновая отделка'
-    indexes_to_change = merged_df[(merged_df.condition=='требует ремонта')&(merged_df.construction_year>=2020)].index
+    indexes_to_change = merged_df[(merged_df.condition == 'требует ремонта') & (merged_df.construction_year >= 2020)].index
     merged_df.loc[indexes_to_change, 'condition'] = 'черновая отделка'
-    indexes_to_change = merged_df[(merged_df.condition=='требует ремонта')].index
+    indexes_to_change = merged_df[(merged_df.condition == 'требует ремонта')].index
     merged_df.loc[indexes_to_change, 'condition'] = 'среднее'
 
+    # Replace values in specific columns
     replace_dict_complex_class = {
         'эконом': 'economy',
         'комфорт': 'comfort',
@@ -1207,26 +1396,26 @@ def process_and_clean_data(merged_df):
     }
     merged_df['condition'] = merged_df['condition'].replace(replace_dict_condition)
 
-
     return merged_df
 
 
-def outliers_z_score(data, feature, log_scale=False, left=3, right=3):
-    if log_scale:
-        x = np.log(data[feature] + 1)
-    else:
-        x = data[feature]
-    mu = x.mean()
-    sigma = x.std()
-    lower_bound = mu - left * sigma
-    upper_bound = mu + right * sigma
-    outliers = data[(x < lower_bound) | (x > upper_bound)]
-    cleaned = data[(x >= lower_bound) & (x <= upper_bound)]
-    return outliers, cleaned
 
+#######################
+# Decision Functions  #
+#######################
 
 # Function for making a decision on normality
-def decision_normality(p, alpha = 0.05  ):
+def decision_normality(p, alpha=0.05):
+    """
+    Make a decision on the normality of a distribution based on the p-value.
+
+    Args:
+    p (float): p-value obtained from normality test.
+    alpha (float): Significance level. Default is 0.05.
+
+    Returns:
+    None
+    """
     print('p-value = {:.3f}'.format(p))
     if p <= alpha:
         print('p-value is less than the specified significance level {:.2f}. The distribution differs from normal.'.format(alpha))
@@ -1235,7 +1424,17 @@ def decision_normality(p, alpha = 0.05  ):
 
 
 # Function for making a decision on rejecting the null hypothesis
-def decision_hypothesis(p, alpha = 0.05 ):
+def decision_hypothesis(p, alpha=0.05):
+    """
+    Make a decision on rejecting the null hypothesis based on the p-value.
+
+    Args:
+    p (float): p-value obtained from hypothesis test.
+    alpha (float): Significance level. Default is 0.05.
+
+    Returns:
+    None
+    """
     print('p-value = {:.3f}'.format(p))
     if p <= alpha:
         print('p-value is less than the specified significance level {:.2f}. Differences between categories are statistically significant.'.format(alpha))
@@ -1243,39 +1442,75 @@ def decision_hypothesis(p, alpha = 0.05 ):
         print('p-value is greater than the specified significance level {:.2f}. No statistically significant differences between categories.'.format(alpha))
 
 
+
+##########################
+# Custom Scoring Function #
+##########################
+
 def mean_relative_error(y_true, y_pred):
+    """
+    Calculate the mean relative error between true and predicted values.
+
+    Args:
+    y_true (array-like): Array of true values.
+    y_pred (array-like): Array of predicted values.
+
+    Returns:
+    float: Mean relative error.
+    """
+    
+    # Exponentiate the true and predicted values to get back the original scale
     y_true_exp = np.exp(y_true) 
     y_pred_exp = np.exp(y_pred)
     relative_errors = np.abs((y_true_exp - y_pred_exp) / y_true_exp)
     return np.mean(relative_errors)
 
+
+
+#--------------------------
+# Learning Curve Function  
+#--------------------------
 def plot_learning_curve(model, X, y, cv, ax=None, title=""):
+    """
+    Plot learning curve for a given model.
+
+    Args:
+    model: Estimator object implementing 'fit'.
+    X: Array-like, shape (n_samples, n_features). Training vector.
+    y: Array-like, shape (n_samples,). Target relative to X for classification or regression.
+    cv: Cross-validation iterator.
+    ax: Matplotlib axes object, optional. Axes to plot the learning curve.
+    title: String, optional. Title of the plot.
+
+    Returns:
+    None
+    """
+    
+    # Define custom scorer
     mre_scorer = make_scorer(mean_relative_error, greater_is_better=False)
-    # Вычисляем координаты для построения кривой обучения
+    # Compute learning curve scores
     train_sizes, train_scores, valid_scores = learning_curve(
-        estimator=model,  # модель
-        X=X,  # матрица наблюдений X
-        y=y,  # вектор ответов y
-        cv=cv,  # кросс-валидатор
+        estimator=model,
+        X=X,
+        y=y,
+        cv=cv,
         scoring=mre_scorer
     )
-    # Вычисляем среднее значение по фолдам для каждого набора данных
+    # Compute mean scores across folds
     train_scores_mean = np.mean(train_scores, axis=1)
     valid_scores_mean = np.mean(valid_scores, axis=1)
-    # Если координатной плоскости не было передано, создаём новую
+    # Create a new figure and axes if ax is not provided
     if ax is None:
-        fig, ax = plt.subplots(figsize=(10, 4))  # фигура + координатная плоскость
-    # Строим кривую обучения по метрикам на тренировочных фолдах
+        fig, ax = plt.subplots(figsize=(10, 4))
+    # Plot learning curve for training scores
     ax.plot(train_sizes, train_scores_mean, label="Train")
-    # Строим кривую обучения по метрикам на валидационных фолдах
+    # Plot learning curve for validation scores
     ax.plot(train_sizes, valid_scores_mean, label="Valid")
-    # Даём название графику и подписи осям
+    # Set title and labels
     ax.set_title("Learning curve: {}".format(title))
     ax.set_xlabel("Train data size")
     ax.set_ylabel("Score")
-    # Устанавливаем отметки по оси абсцисс
+    # Set ticks on x-axis
     ax.xaxis.set_ticks(train_sizes)
-    # # Устанавливаем диапазон оси ординат
-    # ax.set_ylim(0, 1)
-    # Отображаем легенду
+    # Display legend
     ax.legend()
