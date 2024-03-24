@@ -133,68 +133,6 @@ def parse_data_from_krisha(total_pages):
     return krisha_df
 
 
-def preprocess_krisha_df(krisha_df):
-    '''
-    Description:
-    Preprocesses the DataFrame containing data scraped from Krisha.kz. 
-    The function performs various data cleaning and feature extraction tasks on the input DataFrame 
-    and returns a preprocessed DataFrame.
-
-    Arguments:
-        - krisha_df: DataFrame containing the raw data scraped from Krisha.kz.
-
-    Returns:
-        - krisha_df: Preprocessed DataFrame with additional columns containing extracted features such as complex name, 
-        house type, construction year, ceiling height, furniture info, bathroom info, condition, area, room count, 
-        floor information, price, and district.
-        
-    '''
-    krisha_df = krisha_df.drop_duplicates()
-    # Extracting complex name, house type, construction year, ceiling height, furniture info,
-    # bathroom info, condition,  from 'information' column
-    krisha_df['complex_name'] = krisha_df.information.str.extract(r'жил\. комплекс ([^,]+)')[0]
-    krisha_df['complex_name'] = krisha_df['complex_name'].apply(text_unification)
-    krisha_df['house_type'] = krisha_df.information.str.extract(r'(\w+ дом)')[0]
-    krisha_df['house_type'] = krisha_df['house_type'].apply(lambda x: x if x in ['монолитный дом', 'кирпичный дом', 'панельный дом'] else None)
-    krisha_df['in_pledge'] = krisha_df.information.apply(lambda x: 'В залоге' in x)
-    krisha_df['construction_year'] = krisha_df.information.str.extract(r'(\d{4}) г\.п|(\d{4}) г\.п\.')[0].astype(int)
-
-    def process_ceiling_height(info):
-        height_match = re.search(r'потолки (\d+(\.\d+)?)м', info)
-        if height_match:
-            height = float(height_match.group(1))
-            if 2 <= height <= 8:
-                return height
-        return None
-
-    krisha_df['ceiling_height'] = krisha_df['information'].apply(lambda x: process_ceiling_height(x))
-    krisha_df['furniture_info'] = krisha_df.information.str.extract(r'(\w+ мебели)' or r'меблирована ([^,.]+)')[0]
-    krisha_df['bathroom_info'] = krisha_df.information.str.extract(r'санузел (\w+)')
-    krisha_df['bathroom_info'] = krisha_df['bathroom_info'].apply(lambda x: x if x in ['раздельный', '2', 'совмещенный'] else None)
-    krisha_df['condition'] = krisha_df.information.str.extract(r'состояние: ([^,]+)')[0]
-
-    # Extracting area, room count, floor information from 'name' column
-    krisha_df['area'] = krisha_df.name.str.extract(r'(\d+(\.\d+)?) м²')[0].astype(float)
-    krisha_df['room_count'] = krisha_df.name.str.extract(r'(\d+)-комнатная')[0].astype(int)
-    krisha_df['floor'] = krisha_df.name.str.extract(r'([^,]+) этаж')[0]
-
-    # Dividing floor information into total floor count and apartment floor 
-    krisha_df['floor_count'] = krisha_df.floor.str.extract(r'\/(\d{1,2})') 
-    krisha_df['floor'] = krisha_df.floor.str.extract(r'(\d{1,2})/')
-    # Extraction of the number from price and converting it to integer
-    krisha_df['price'] = krisha_df.price.replace(r'\D', '', regex=True)
-
-    # Extracting district from 'address' column                     
-    krisha_df['district'] = krisha_df.address.str.extract(r'(р-н\s+\w+|\w+ р-н)')[0] 
-    krisha_df['district'] = krisha_df['district'].apply(lambda x: 'Байконур р-н' if x=='р-н Байконур' else x)
-    # This lambda function applies regex to remove district names and commas from addresses
-    krisha_df['address'] = krisha_df['address'].apply(
-        lambda x: re.sub(r'(?:р-н\s+\w+|\w+\s+р-н)', '', x).replace(',', ''))
-    krisha_df['address'] = krisha_df['address'].astype(str)
-    krisha_df['address'] = krisha_df['address'].apply(lambda x: x.split(' — ')[0] if ' — ' in x else x)
-
-    return krisha_df
-
 
 def parse_data_from_kn():
     '''
@@ -398,6 +336,86 @@ def parse_data_from_kn():
 #################################################################
 # Process and Cleaning Functions  for  krisha_df and complex_df #
 #################################################################
+
+def text_unification(complex_name: str) -> str:
+    """
+    Normalize complex_name by converting it to lowercase and replacing hyphens with spaces.
+
+    Args:
+        complex name (str): The complex name to be normalized.
+    
+    Returns:
+        str: The normalized and cleaned from hyphens complex name.
+    """
+        
+    if isinstance(complex_name, str):
+        complex_name = complex_name.lower()
+        complex_name = complex_name.replace('-', ' ')
+    return complex_name
+
+
+def preprocess_krisha_df(krisha_df):
+    '''
+    Description:
+    Preprocesses the DataFrame containing data scraped from Krisha.kz. 
+    The function performs various data cleaning and feature extraction tasks on the input DataFrame 
+    and returns a preprocessed DataFrame.
+
+    Arguments:
+        - krisha_df: DataFrame containing the raw data scraped from Krisha.kz.
+
+    Returns:
+        - krisha_df: Preprocessed DataFrame with additional columns containing extracted features such as complex name, 
+        house type, construction year, ceiling height, furniture info, bathroom info, condition, area, room count, 
+        floor information, price, and district.
+        
+    '''
+    
+    krisha_df = krisha_df.drop_duplicates().reset_index(drop=True).copy()
+    # Extracting complex name, house type, construction year, ceiling height, furniture info,
+    # bathroom info, condition,  from 'information' column
+    krisha_df.loc[:, 'complex_name'] = krisha_df.information.str.extract(r'жил\. комплекс ([^,]+)')[0]
+    krisha_df.loc[:, 'complex_name'] = krisha_df.complex_name.apply(text_unification)
+    krisha_df.loc[:, 'house_type'] = krisha_df.information.str.extract(r'(\w+ дом)')[0]
+    krisha_df.loc[:, 'house_type'] = krisha_df.house_type.apply(lambda x: x if x in ['монолитный дом', 'кирпичный дом', 'панельный дом'] else None)
+    krisha_df.loc[:, 'in_pledge'] = krisha_df.information.apply(lambda x: 'В залоге' in x)
+    krisha_df.loc[:, 'construction_year'] = krisha_df.information.str.extract(r'(\d{4}) г\.п|(\d{4}) г\.п\.')[0].astype(int)
+
+    def process_ceiling_height(info):
+        height_match = re.search(r'потолки (\d+(\.\d+)?)м', info)
+        if height_match:
+            height = float(height_match.group(1))
+            if 2 <= height <= 8:
+                return height
+        return None
+
+    krisha_df.loc[:, 'ceiling_height'] = krisha_df.information.apply(lambda x: process_ceiling_height(x))
+    krisha_df.loc[:, 'furniture_info'] = krisha_df.information.str.extract(r'(\w+ мебели)' or r'меблирована ([^,.]+)')[0]
+    krisha_df.loc[:, 'bathroom_info'] = krisha_df.information.str.extract(r'санузел (\w+)')
+    krisha_df.loc[:, 'bathroom_info'] = krisha_df.bathroom_info.apply(lambda x: x if x in ['раздельный', '2', 'совмещенный'] else None)
+    krisha_df.loc[:, 'condition'] = krisha_df.information.str.extract(r'состояние: ([^,]+)')[0]
+
+    # Extracting area, room count, floor information from 'name' column
+    krisha_df.loc[:, 'area'] = krisha_df.name.str.extract(r'(\d+(\.\d+)?) м²')[0].astype(float)
+    krisha_df.loc[:, 'room_count'] = krisha_df.name.str.extract(r'(\d+)-комнатная')[0].astype(int)
+    krisha_df.loc[:, 'floor'] = krisha_df.name.str.extract(r'(\d{1,2})/(\d{1,2}) этаж')[0]
+    krisha_df.loc[:, 'floor_count'] = krisha_df.name.str.extract(r'(\d{1,2})/(\d{1,2}) этаж')[1]
+
+    # Extraction of the number from price and converting it to integer
+    krisha_df.loc[:, 'price'] = krisha_df.price.replace(r'\D', '', regex=True)
+
+    # Extracting district from 'address' column                     
+    krisha_df.loc[:, 'district'] = krisha_df.address.str.extract(r'(р-н\s+\w+|\w+ р-н)')[0] 
+    krisha_df.loc[:, 'district'] = krisha_df.district.apply(lambda x: 'Байконур р-н' if x=='р-н Байконур' else x)
+    # This lambda function applies regex to remove district names and commas from addresses
+    krisha_df.loc[:, 'address'] = krisha_df.address.apply(
+        lambda x: re.sub(r'(?:р-н\s+\w+|\w+\s+р-н)', '', x).replace(',', ''))
+    krisha_df.loc[:, 'address'] = krisha_df.address.astype(str)
+    krisha_df.loc[:, 'address'] = krisha_df.address.apply(lambda x: x.split(' — ')[0] if ' — ' in x else x)
+
+    return krisha_df
+
+
 def preprocess_complex_df(complex_df):
     '''
     Description:
@@ -473,22 +491,6 @@ def find_missing_complexes(krisha_df, complex_df):
     print(f"Number of complexes from the complex_df that do not match with complexes in the krisha_df or absent: {len(difference)}")
     print(f"List of these complexes: {list(difference)}")
     
-    
-def text_unification(complex_name: str) -> str:
-    """
-    Normalize complex_name by converting it to lowercase and replacing hyphens with spaces.
-
-    Args:
-        complex name (str): The complex name to be normalized.
-    
-    Returns:
-        str: The normalized and cleaned from hyphens complex name.
-    """
-        
-    if isinstance(complex_name, str):
-        complex_name = complex_name.lower()
-        complex_name = complex_name.replace('-', ' ')
-    return complex_name
 
     
 def second_preprocess_complex_df(complex_df):
