@@ -400,9 +400,11 @@ def preprocess_krisha_df(krisha_df):
     krisha_df.loc[:, 'room_count'] = krisha_df.name.str.extract(r'(\d+)-комнатная')[0].astype(int)
     krisha_df.loc[:, 'floor'] = krisha_df.name.str.extract(r'(\d{1,2})/(\d{1,2}) этаж')[0]
     krisha_df.loc[:, 'floor_count'] = krisha_df.name.str.extract(r'(\d{1,2})/(\d{1,2}) этаж')[1]
-
+    krisha_df['floor '] = pd.to_numeric(krisha_df['floor'], errors='coerce')
+    krisha_df['floor_count'] = pd.to_numeric(krisha_df['floor_count'], errors='coerce')
+    
     # Extraction of the number from price and converting it to integer
-    krisha_df.loc[:, 'price'] = krisha_df.price.replace(r'\D', '', regex=True)
+    krisha_df.loc[:, 'price'] = krisha_df.price.replace(r'\D', '', regex=True).astype("int")
 
     # Extracting district from 'address' column                     
     krisha_df.loc[:, 'district'] = krisha_df.address.str.extract(r'(р-н\s+\w+|\w+ р-н)')[0] 
@@ -979,8 +981,7 @@ def geocode_2gis(address):
     '''
     
     address = address + ", Астана"
-    api_key = '031aa401-ce07-402c-95ed-23f70fc51f24' 
-    #api_key = 'ed9415cf-b4fd-4bc5-98b9-9da7e3ee9908' #'dbfc2ea8-0262-4ef3-acb2-d0a46adf9557'
+    api_key = '768ac379-04fb-4f9e-a775-959e3e2bc30b'
     url = f'https://catalog.api.2gis.com/3.0/items/geocode?q={address}&fields=items.point&key={api_key}'
 
     try:
@@ -1221,7 +1222,7 @@ kindergartens_coord_dict = {
 # Functions for calculating or checking places based on complex coordinates #
 #############################################################################
 # Counting the number of nearby places
-def count_places_within_radius(places_dict, complex_coordinates, radius):
+def count_places_within_radius(places_dict, complex_coordinates, radius=1000):
     '''
     Counts the number of places (schools or kindergartens) within a specified radius from a given complex location.
 
@@ -1256,7 +1257,7 @@ def count_places_within_radius(places_dict, complex_coordinates, radius):
 
 
 # Checking if there is a park within 1 km radius
-def checking_park(coordinates, radius):
+def checking_park(coordinates, radius=2000):
     '''
     Checks if there is a park within a specified radius from the given coordinates.
 
