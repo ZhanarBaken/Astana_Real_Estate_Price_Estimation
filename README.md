@@ -226,10 +226,52 @@ By synergizing these tools and data sources, my notebook offers a sophisticated 
 
 1. Data Parsing
 
-2. Handling Missing Values and Feature Engineering
+At this stage, work was done on data scraping from two websites: "krisha.kz" and "kn.kz". The first website contains data on apartments for sale in the city of Astana, while the second one provides information about residential complexes in Astana.
 
-3. Data Analysis
+2. Raw Data Processing
 
-4. Encoding
+At this stage, significant work was done on processing the downloaded data. Relevant information was extracted into separate features. The names of the complexes were standardized in both tables, as they will serve as keys for merging the two tables in the future.
 
-5. Model Training (in progress)
+3. Handling Missing Values and Feature Engineering
+
+At this stage, missing data was filled using three methods:
+
+- Imputation from the second table by merging the datasets.
+- Manual imputation by analyzing the conditions of buildings in Astana.
+- Utilizing Random Forest Classifier.
+
+Additionally, coordinates of residential complexes and addresses mentioned in the apartments' listings were obtained using the 2GIS API. This allowed for the generation of numerous useful additional features such as distance to the city center, parks, number of schools within a radius, and much more.
+
+4. Exploratory analysis
+
+Outliers were removed by analyzing the data and visualizations. For example, knowing the distance to the city center, apartments located outside Astana were removed. Additionally, the target variable was logarithmically transformed since the price distribution was far from normal.
+
+5. Encoding and data preparation for training
+
+Using various methods such as LabelEncoder, OrdinalEncoder, BinaryEncoder, and One-hot encoding, all categorical features were encoded depending on their characteristics.
+
+6. Feature and Model Selection
+
+At this stage, training was conducted on different types of models such as:
+
+- Ridge: Ridge Regression
+- SVR: Support Vector Regression
+- Random Forest: Random Forest Regression
+- Gradient Boosting: Gradient Boosting Regression
+- XGBoost: Extreme Gradient Boosting Regression
+- CatBoostRegression: CatBoost Regression
+
+Hyperparameter tuning and feature selection were performed, resulting in an improvement in the metric, with Mean Relative Error (MRE) chosen as the evaluation metric.
+
+Additionally, stacking method was experimented with, along with training on the full dataset using CatBoost.
+
+The chosen model has been serialized.
+
+7. Model deployment
+
+- The serialized model has undergone rigorous testing to ensure its reliability and accuracy.
+- A web application has been developed to provide a user-friendly interface for accessing the model's predictions.
+- An index has been implemented to serve as the landing page for the website, providing users with easy navigation and access to relevant information.
+- A periodic function has been written to automate the process of downloading new data and retraining the model on an annual basis, ensuring that it remains up-to-date and continues to deliver optimal performance over time.
+
+# <p style="border:3px solid DodgerBlue;text-align:center;font-size:100%;">Conclusion. </p> 
