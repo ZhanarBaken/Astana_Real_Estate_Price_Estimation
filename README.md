@@ -23,7 +23,7 @@ Extracting pertinent details about residential complexes from kn.kz, I enrich my
 
 By synergizing these tools and data sources, my notebook offers a sophisticated solution for estimating real estate prices in Astana. Through detailed code demonstrations and insightful analysis, I aim to provide valuable insights to stakeholders in the Astana housing market.
 
-![app](data/app.png)
+![Here should have been an image from the application's website.](data/app.png)
 
 # <p style="border:3px solid DodgerBlue;text-align:center;font-size:100%;">Let's look at the data. </p> 
     
@@ -275,8 +275,12 @@ The chosen model has been serialized.
 - An index has been implemented to serve as the landing page for the website, providing users with easy navigation and access to relevant information.
 - A periodic function has been written to automate the process of downloading new data and retraining the model on an annual basis, ensuring that it remains up-to-date and continues to deliver optimal performance over time.
 
+![Here should have been a chart from the Comet ML displaying the metrics.](data/from_comet_ml.png) 
+
 # <p style="border:3px solid DodgerBlue;text-align:center;font-size:100%;">Conclusion. </p> 
 
 The best metrics were demonstrated by CatBoostRegression, which was trained on the complete dataset without removing features "state" and "toilet", and all names of residential complexes were passed as well, as CatBoost can handle a large number of unique categories and explicitly specified missing data, allowing these two features not to be removed. 
 
 Interestingly, the base hyperparameters performed better than after tuning. Therefore, CatBoostRegression with default settings was chosen for serialization.
+
+The baseline model has an error rate of 17%, whereas the selected model reduces this error to 10%, representing an improvement of 7 percentage points compared to the baseline model.
