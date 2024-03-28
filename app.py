@@ -68,7 +68,7 @@ def check_model_update():
 # Function to update the model
 def update_model():
     # Load the existing model
-    with open("ctb_reg_full.pkl", "rb") as f:
+    with open("model.pkl", "rb") as f:
         model = pickle.load(f)
         
     # Call the function to prepare data
@@ -78,7 +78,7 @@ def update_model():
     model.fit(X_train_new, y_train_new)
     
     # Save the updated model
-    with open("ctb_reg_full_updated.pkl", "wb") as f:
+    with open("model.pkl", "wb") as f:
         pickle.dump(model, f)
     
     # Save the model update date
@@ -175,7 +175,7 @@ if check_model_update():
     model = update_model()
 else:
     # If no update is needed, load the existing model
-    with open("ctb_reg_full.pkl", "rb") as f:
+    with open("model.pkl", "rb") as f:
         model = pickle.load(f)
 
 @flask_app.route('/data/<path:path>')
