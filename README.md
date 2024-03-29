@@ -204,11 +204,6 @@ By synergizing these tools and data sources, my notebook offers a sophisticated 
     <td>float64</td>
   </tr>
   <tr>
-    <td>kzt_sq_m</td>
-    <td>the price per square meter in Kazakh Tenge (KZT)</td>
-    <td>float64</td>
-  </tr>
-  <tr>
     <td>last_floor</td>
     <td>a boolean feature indicating whether the floor is the last one or not</td>
     <td>bool</td>
@@ -279,7 +274,7 @@ The chosen model has been serialized.
 
 # <p style="border:3px solid DodgerBlue;text-align:center;font-size:100%;">Conclusion. </p> 
 
-The best metrics were demonstrated by CatBoostRegression, which was trained on the complete dataset without removing features "state" and "toilet", and all names of residential complexes were passed as well, as CatBoost can handle a large number of unique categories and explicitly specified missing data, allowing these two features not to be removed. 
+The best metrics were demonstrated by CatBoostRegression, which was trained on the complete dataset without removing features "condition" and "bathroom_info", and all names of residential complexes were passed as well, as CatBoost can handle a large number of unique categories and explicitly specified missing data, allowing these two features not to be removed. 
 
 Interestingly, the base hyperparameters performed better than after tuning. Therefore, CatBoostRegression with default settings was chosen for serialization.
 
