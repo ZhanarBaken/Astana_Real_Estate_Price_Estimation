@@ -3,6 +3,8 @@
 # Astana Real Estate Price Estimation Chatbot
 
 ## Introduction
+
+
 Welcome to my Notebook for Real Estate Price Estimation in Astana!
 
 In this notebook, I present a comprehensive approach to estimating real estate prices in Astana, Kazakhstan. Leveraging the power of Python and various libraries, I have developed a robust system that utilizes data from multiple sources to provide accurate price predictions.
@@ -22,6 +24,10 @@ By employing the Geopy library, I calculate distances between properties and var
 Extracting pertinent details about residential complexes from kn.kz, I enrich my dataset with additional insights into neighborhood characteristics, amenities, and community features. This information contributes to a more comprehensive understanding of the factors affecting property prices in Astana.
 
 By synergizing these tools and data sources, my notebook offers a sophisticated solution for estimating real estate prices in Astana. Through detailed code demonstrations and insightful analysis, I aim to provide valuable insights to stakeholders in the Astana housing market.
+
+## Accessing the Deployed Project
+
+The project is deployed and accessible online. You can access it by clicking [here](https://afternoon-coast-48911-526b96a0969a.herokuapp.com).
 
 ![Here should have been an image from the application's website.](data/app.png)
 
