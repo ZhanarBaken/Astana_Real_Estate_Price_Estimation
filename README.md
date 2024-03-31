@@ -29,7 +29,10 @@ By synergizing these tools and data sources, my notebook offers a sophisticated 
 
 The project is deployed and accessible online. You can access it by clicking [here](https://astana-estate-9ed7e52002f1.herokuapp.com).
 
-![Here should have been an image from the application's website.](data/app.png)
+<div style="display: flex;">
+    <img src="data/app.png" alt="App Screenshot" style="width: 45%;">
+    <img src="data/prediction.png" alt="Prediction Screenshot" style="width: 45%;">
+</div>
 
 # <p style="border:3px solid DodgerBlue;text-align:center;font-size:100%;">Let's look at the data. </p> 
     
