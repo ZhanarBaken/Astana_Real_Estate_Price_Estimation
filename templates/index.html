@@ -28,6 +28,11 @@
     .login form button {
         margin-top: 20px;
     }
+
+    .helper-text {
+        font-size: 0.8em; 
+    }
+
   </style>
 </head>
 <body>
@@ -42,10 +47,15 @@
             <option value="agent">Риелтор</option>
         </select>
         <label for="complexInput">Название Комплекса:</label>
+        <span class="helper-text">
+            Если год постройки вашего дома ранее 2000 года или ЖК не имеет название, выберите один из вариантов: <br>
+            no name, бережневка, панелька нового типа
+        </span>
         <input type="text" id="complexInput" name="complex_name" placeholder="Название Комплекса" list="complexList" required="required" autocomplete="off" />
         <datalist id="complexList"></datalist>
         <label for="address">Адрес:</label>
-        <input type="text" name="address" placeholder="Адрес" title="Пример: Улица Сарайшык, 38" required />
+        <span class="helper-text">Пример: Улица Сарайшык, 38</span>
+        <input type="text" name="address" placeholder="Адрес" required />
         <label for="house_type">Выберите тип дома:</label>
         <select id="house_type" name="house_type">
             <option value="monolithic">монолитный</option>

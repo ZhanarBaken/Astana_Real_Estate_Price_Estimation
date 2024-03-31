@@ -196,8 +196,13 @@ def predict():
     processed_data = process_data(form_data)
     prediction = model.predict(processed_data)
     prediction = np.exp(prediction)
-    prediction_text = "The price is {}".format(np.round(prediction))  
-    return render_template("index.html", prediction_text=prediction_text)
+    prediction_text = "Примерная стоимость: {:,.0f} тенге".format(prediction[0])
+    return redirect(url_for('prediction_result', prediction_text=prediction_text))
+
+@flask_app.route("/prediction_result")
+def prediction_result():
+    prediction_text = request.args.get('prediction_text', '')
+    return render_template("prediction_result.html", prediction_text=prediction_text)
 
 if __name__ == "__main__":
     flask_app.run(debug=True, port=8080)
