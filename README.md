@@ -27,7 +27,7 @@ By synergizing these tools and data sources, my notebook offers a sophisticated 
 
 ## Accessing the Deployed Project
 
-The project is deployed and accessible online. You can access it by clicking [here](https://afternoon-coast-48911-526b96a0969a.herokuapp.com).
+The project is deployed and accessible online. You can access it by clicking [here](https://astana-estate-9ed7e52002f1.herokuapp.com).
 
 ![Here should have been an image from the application's website.](data/app.png)
 
