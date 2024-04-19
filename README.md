@@ -27,7 +27,6 @@ By synergizing these tools and data sources, my notebook offers a sophisticated 
 
 ## Accessing the Deployed Project
 
-The project is deployed and accessible online. You can access it by clicking [here](https://astana-estate-9ed7e52002f1.herokuapp.com).
 
 <div style="display: flex;">
     <img src="data/app.png" alt="App Screenshot" style="width: 45%;">
