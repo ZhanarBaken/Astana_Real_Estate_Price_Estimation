@@ -27,7 +27,7 @@ By synergizing these tools and data sources, my notebook offers a sophisticated 
 
 ## Accessing the Deployed Project
 
-This app is available at [https://astana-estate-prediction.up.railway.app](https://astana-estate-prediction.up.railway.app)      
+This app is available at [https://astanaestateflaskapp-production.up.railway.app](https://astanaestateflaskapp-production.up.railway.app)      
 
 <div style="display: flex;">
     <img src="data/app.png" alt="App Screenshot" style="width: 45%;">
