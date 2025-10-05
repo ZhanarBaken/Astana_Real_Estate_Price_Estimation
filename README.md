@@ -25,9 +25,7 @@ Extracting pertinent details about residential complexes from kn.kz, I enrich my
 
 By synergizing these tools and data sources, my notebook offers a sophisticated solution for estimating real estate prices in Astana. Through detailed code demonstrations and insightful analysis, I aim to provide valuable insights to stakeholders in the Astana housing market.
 
-## Accessing the Deployed Project
-
-This app is available at [https://astanaestateflaskapp-production.up.railway.app](https://astanaestateflaskapp-production.up.railway.app)      
+## Accessing the Deployed Project   
 
 <div style="display: flex;">
     <img src="data/app.png" alt="App Screenshot" style="width: 45%;">
